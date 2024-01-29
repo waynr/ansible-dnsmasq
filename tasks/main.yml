@@ -1,16 +1,39 @@
 # tasks file
 ---
-- name: install dependencies
+- name: "[debian] install dependencies"
   ansible.builtin.apt:
     name: "{{ dnsmasq_dependencies }}"
     state: "{{ apt_install_state | default('latest') }}"
     update_cache: true
     cache_valid_time: "{{ apt_update_cache_valid_time | default(3600) }}"
+  when: ansible_os_family == "Debian"
   tags:
     - configuration
     - dnsmasq
     - dnsmasq-install
     - dnsmasq-install-dependencies
+
+- name: "[archlinux] install dependencies"
+  community.general.pacman:
+    name: "{{ dnsmasq_dependencies }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Archlinux"
+  tags:
+    - configuration
+    - dnsmasq
+    - dnsmasq-install
+    - dnsmasq-install-dependencies
+
+- name: ensure the /etc/dnsmasq.d directory exists
+  file:
+    state: directory
+    path: "/etc/dnsmasq.d/"
+  tags:
+    - configuration
+    - dnsmasq
+    - dnsmasq-configuration
+    - dnsmasq-configuration-add-specific-configuration-files
 
 - name: update configuration file(s)
   ansible.builtin.template:
